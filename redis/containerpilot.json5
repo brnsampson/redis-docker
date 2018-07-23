@@ -1,0 +1,45 @@
+{
+  consul: "localhost:8500",
+  logging: {
+    level: "DEBUG",
+    format: "default",
+    output: "stdout"
+  },
+  jobs: [
+    {
+      name: "consul-agent",
+      exec: [
+        "consul", "agent",
+        "-rejoin",
+        "-retry-join", "{{ if .CONSUL }}{{ .CONSUL }}{{ else }}consul{{ end }}",
+        "-retry-max", "10",
+        "-retry-interval", "10s",
+        "-data-dir", "/data/"
+      ],
+      health: {
+        exec: ["/usr/local/bin/manage.sh", "consulHealth"],
+        interval: 10,
+        ttl: 30,
+        timeout: 5
+      },
+      restarts: "unlimited"
+    },
+    {
+      name: "redis",
+      exec: ["redis-server", "/usr/local/etc/redis/redis.conf"],
+      restarts: "unlimited",
+      port: 6379,
+      when: {
+        source: "consul-agent",
+        once: "healthy",
+        timeout: "120s"
+      },
+      health: {
+        exec: ["/usr/local/bin/manage.sh", "redisHealth"],
+        interval: 10,
+        ttl: 30,
+        timeout: 3
+      }
+    }
+  ]
+}

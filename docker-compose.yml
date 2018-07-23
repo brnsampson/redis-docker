@@ -1,0 +1,25 @@
+version: '0.1'
+
+network_mode: "bridge"
+
+services:
+  redis:
+    build: redis/
+    links:
+      - consul:consul
+    ports:
+      - "6379:6379"
+  
+  consul:
+    image: consul:latest
+    restart: always
+    mem_limit: 128m
+    ports:
+      - "53:53"
+      - "8600:8600"
+      - "8301:8301"
+      - "8302:8302"
+      - "8300:8300"
+    environment:
+      - LOG_LEVEL=info
+    command: "consul agent -server -bootstrap-expect=1 -data-dir=/consul/data -node=consul -bind=0.0.0.0 -config-dir=/consul/config"
