@@ -17,12 +17,21 @@
         "-data-dir", "/data/"
       ],
       health: {
-        exec: ["/usr/local/bin/manage.sh", "consulHealth"],
+        exec: ["/app/manage", "isConsulHealthy"],
         interval: 10,
         ttl: 30,
         timeout: 5
       },
       restarts: "unlimited"
+    },
+    {
+      name: "preStart",
+      exec: ["manage", "redisPreStart"],
+      when: {
+        source: "consul-agent",
+        once: "healthy",
+        timeout: "120s"
+      },
     },
     {
       name: "redis",
@@ -35,11 +44,18 @@
         timeout: "120s"
       },
       health: {
-        exec: ["/usr/local/bin/manage.sh", "redisHealth"],
+        exec: ["/app/manage", "isRedisHealthy"],
         interval: 10,
         ttl: 30,
         timeout: 3
       }
+    }
+  ],
+  watches: [
+    {
+      name: "redis-test",
+      tag: "dev",
+      interval: 10
     }
   ]
 }

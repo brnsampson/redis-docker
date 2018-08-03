@@ -1,8 +1,29 @@
-From redis:4.0.10
+FROM golang:stretch as builder
+
+RUN mkdir /build
+
+COPY src/ /go/src/
+
+WORKDIR /go
+
+RUN apt-get update; \
+    apt-get install -y git; \
+    rm -rf /var/lib/apt/lists/*
+
+RUN go get github.com/go-redis/redis \
+    && go get github.com/hashicorp/consul/api \
+    && go build -i -o manage manage \
+    && chmod +x manage
+
+
+From redis:4.0.11
 
 RUN apt-get update; \
     apt-get install -y curl unzip; \
-    rm -rf /var/lib/apt/lists/*;
+    rm -rf /var/lib/apt/lists/*; \
+    mkdir app;
+
+WORKDIR /app
 
 # Install consul agent
 RUN export CONSUL_VERSION=1.2.1 \
@@ -35,8 +56,11 @@ ENV CONTAINERPILOT=${CONTAINERPILOT_PATH}
 
 # Copy redis configuration
 # COPY consul.hcl /etc/consul/
-COPY manage.sh /usr/local/bin/
+COPY --from=builder /go/manage /app/
 COPY redis.conf /usr/local/etc/redis/redis.conf
+
+ENV REDIS_ADDR 127.0.0.1:6379
+ENV REDIS_PASS P@ssword!
 
 VOLUME ["/data"]
 
