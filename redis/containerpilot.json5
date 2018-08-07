@@ -39,8 +39,8 @@
       restarts: "unlimited",
       port: 6379,
       when: {
-        source: "consul-agent",
-        once: "healthy",
+        source: "prestart",
+        once: "exitSuccess",
         timeout: "120s"
       },
       health: {
@@ -53,7 +53,7 @@
   ],
   watches: [
     {
-      name: "redis-test",
+      name: "redis",
       tag: "dev",
       interval: 10
     }

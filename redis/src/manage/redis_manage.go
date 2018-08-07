@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/go-redis/redis"
+	"github.com/hashicorp/consul/api"
 	"strings"
 	"unicode"
 	"os"
@@ -11,6 +12,7 @@ import (
 
 type redisInstance struct {
 	rc *redis.Client
+	cc *api.Client
 }
 
 func newRedisInstance() *redisInstance {
@@ -23,6 +25,23 @@ func newRedisInstance() *redisInstance {
 	})
 
 	return &redisInstance{rc}
+}
+
+func (ri *redisInstance) redisPreStart() error {
+	// TODO: get lock here before testing for masters.
+
+	// Gather list of existing nodes in the service.
+	nodes, meta, err := ri.cc.Service("redis", "dev", *q)
+	master := ""
+	for node := range nodes {
+		// Set the value of master to addr:port of any master instance found.
+	}
+
+	// If master instance exists, configure ourself to be a replica of it.
+
+	// Otherwise, start as a master instance.
+
+	// Release the lock
 }
 
 func (ri *redisInstance) isRedisReady() (bool, error) {
