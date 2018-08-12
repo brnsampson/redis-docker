@@ -11,6 +11,7 @@ RUN apt-get update; \
     rm -rf /var/lib/apt/lists/*
 
 RUN go get github.com/go-redis/redis \
+    && go get github.com/spf13/cobra/cobra \
     && go get github.com/hashicorp/consul/api \
     && go build -i -o manage manage \
     && chmod +x manage

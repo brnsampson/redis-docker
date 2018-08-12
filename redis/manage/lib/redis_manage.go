@@ -1,47 +1,65 @@
-package main
+package lib
 
 import (
 	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/hashicorp/consul/api"
+	"github.com/spf13/cobra"
 	"strings"
 	"unicode"
 	"os"
 	"time"
 )
 
-type redisInstance struct {
-	rc *redis.Client
-	cc *api.Client
-}
-
-func newRedisInstance() *redisInstance {
+// RedisPreStart returns a cobra run command for the prerun verb. We check if
+// there is already a master registered with consul and if there is we
+// reconfigure ourselves as a replica as appropriate.
+func RedisPreStart(addr, pass, name, lockPath string) func(cmd *cobra.Command, args []string) {
 	rc := redis.NewClient(&redis.Options{
-		Addr:         os.Getenv("REDIS_ADDR"),
+		Addr:         addr,
 		DialTimeout:  1 * time.Second,
-		Password:     os.Getenv("REDIS_PASS"),
+		Password:     pass,
 		ReadTimeout:  1 * time.Second,
 		WriteTimeout: 1 * time.Second,
 	})
+	cc, err := api.NewClient(api.DefaultConfig())
 
-	return &redisInstance{rc}
+	ri := redisInstance{rc, cc, name, lockPath}
+
+	return func(cmd *cobra.Command, args []string) {
+		// Should probably put this in a loop so we can wait on it's success...
+		ready, err := ri.isRedisReady()
+		if err != nil {
+			fmt.Println("Error getting redis status")
+			sys.exit(1)
+		} else if ready != true {
+			rmt.Println("Redis not ready to accept connections")
+			sys.exit(2)
+		}
+
+		ri.configureRole()
+
+		// Gather list of existing nodes in the service.
+		nodes, meta, err := ri.cc.Service("redis", "dev", *q)
+		master := ""
+		for node := range nodes {
+			// Set the value of master to addr:port of any master instance found.
+		}
+
+		// If master instance exists, configure ourself to be a replica of it.
+
+		// Otherwise, start as a master instance.
+
+		// Release the lock
+
+	}
 }
 
-func (ri *redisInstance) redisPreStart() error {
-	// TODO: get lock here before testing for masters.
-
-	// Gather list of existing nodes in the service.
-	nodes, meta, err := ri.cc.Service("redis", "dev", *q)
-	master := ""
-	for node := range nodes {
-		// Set the value of master to addr:port of any master instance found.
-	}
-
-	// If master instance exists, configure ourself to be a replica of it.
-
-	// Otherwise, start as a master instance.
-
-	// Release the lock
+type redisInstance struct {
+	rc *redis.Client
+	cc *api.Client
+	name string
+	lockPath string
 }
 
 func (ri *redisInstance) isRedisReady() (bool, error) {
@@ -114,4 +132,14 @@ func parseRedisInfo(in string) map[string]string {
 		out[parts[0]] = parts[1]
 	}
 	return out
+}
+
+func (ri *redisInstance) configureRole() error {
+	// Acquire lock
+	// Get servers in service from consul
+	// Check if any of them are masters
+	//     If so, become replica of that
+	//     If not, become master
+	//     If no nodes in service, become master
+	return nil
 }
