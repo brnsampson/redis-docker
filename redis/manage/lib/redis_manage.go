@@ -5,7 +5,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/hashicorp/consul/api"
 	"github.com/spf13/cobra"
-	"sys"
+	"os"
 	"strings"
 	"unicode"
 	"time"
@@ -31,10 +31,10 @@ func RedisPreStart(addr, pass, name, lockPath string) func(cmd *cobra.Command, a
 		ready, err := ri.isRedisReady()
 		if err != nil {
 			fmt.Println("Error getting redis status")
-			sys.exit(1)
+			os.exit(1)
 		} else if ready != true {
 			fmt.Println("Redis not ready to accept connections")
-			sys.exit(2)
+			os.exit(2)
 		}
 
 		ri.configureRole()
