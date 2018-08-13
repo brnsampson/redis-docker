@@ -5,9 +5,9 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/hashicorp/consul/api"
 	"github.com/spf13/cobra"
+	"sys"
 	"strings"
 	"unicode"
-	"os"
 	"time"
 )
 
@@ -33,14 +33,14 @@ func RedisPreStart(addr, pass, name, lockPath string) func(cmd *cobra.Command, a
 			fmt.Println("Error getting redis status")
 			sys.exit(1)
 		} else if ready != true {
-			rmt.Println("Redis not ready to accept connections")
+			fmt.Println("Redis not ready to accept connections")
 			sys.exit(2)
 		}
 
 		ri.configureRole()
 
 		// Gather list of existing nodes in the service.
-		nodes, meta, err := ri.cc.Service("redis", "dev", *q)
+		nodes, meta, err := ri.cc.Catalog().Service("redis", "dev", *q)
 		master := ""
 		for node := range nodes {
 			// Set the value of master to addr:port of any master instance found.
