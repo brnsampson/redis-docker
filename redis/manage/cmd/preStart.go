@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/brnsampson/redis-docker/redis/manage/lib"
+	"github.com/brnsampson/redis-docker/redis/manage/service"
 )
 
 // preStartCmd represents the preStart command
@@ -31,7 +31,7 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: lib.RedisPreStart,
+	Run: RedisPreStart,
 }
 
 func init() {
@@ -46,4 +46,27 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// preStartCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+// RedisPreStart returns a cobra run command for the prerun verb. We check if
+// there is already a master registered with consul and if there is we
+// reconfigure ourselves as a replica as appropriate.
+func RedisPreStart(rm RedisServiceManager) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		// Should probably put this in a loop so we can wait on it's success...
+		s := service.Service{}
+		ready, err := s.IsRedisReady()
+		if err != nil {
+			fmt.Println("Error getting redis status")
+			os.Exit(1)
+		} else if ready != true {
+			fmt.Println("Redis not ready to accept connections")
+			os.Exit(2)
+		}
+
+		if err = s.ConfigureServiceRoles(); err != nil {
+			fmt.Println("Error while configuring role")
+			os.Exit(3)
+		}
+	}
 }

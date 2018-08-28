@@ -1,6 +1,7 @@
 package lib
 
 type ServiceLogger interface {
+	Logger
 	Debug()
 	Debugln()
 	Debugf()

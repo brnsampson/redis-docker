@@ -49,3 +49,16 @@ func init() {
 	// is called directly, e.g.:
 	// preStopCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
+
+// RedisPreStart returns a cobra run command for the prerun verb.
+func RedisPreStop(rm RedisServiceManager) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		// Gracefully close any connections as needed.
+		s := service.NewService()
+		err := s.RemoveLocalInstance()
+		if err != nil {
+			fmt.Println("Error closing redis connections!")
+			os.Exit(1)
+		}
+	}
+}
