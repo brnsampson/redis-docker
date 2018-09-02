@@ -2,18 +2,24 @@ package remote
 
 import "testing"
 
-type TestRemoteShim struct {}
+type TestRemoteShim struct {
+	err error
+}
 
 func (s *TestRemoteShim) ReadState(name string) (*RemoteState, error) {
+	return &RemoteState{}, err
 }
 
 func (s *TestRemoteShim) ReadKey(key string) (string, error) {
+	return key, err
 }
 
-func (s *TestRemoteShim) Lock(path string) (string, error) {
+func (s *TestRemoteShim) Lock(path string) error {
+	return err
 }
 
-func (s *TestRemoteShim) Unlock(path string) (string, error) {
+func (s *TestRemoteShim) Unlock(path string) error {
+	return err
 }
 
 // Perform tests

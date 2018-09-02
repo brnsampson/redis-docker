@@ -1,7 +1,7 @@
 package instance
 
 type InstanceInfoParser interface {
-	ParseInstanceInfo(string, *InstanceInfo) error
+	ParseInstanceInfo(string, InstanceInfo) error
 }
 
 type InstanceShimmer interface {
@@ -9,6 +9,6 @@ type InstanceShimmer interface {
 	GetInfo() (string, error)
 	ReadConfig(string) (string, error)
 	UpdateConfig(string, string) error
-	SetReplication(string) error
+	SetReplication(string, string) error
 	Quit() error
 }
