@@ -12,9 +12,10 @@ RUN apt-get update; \
 
 RUN go get github.com/go-redis/redis \
     && go get github.com/hashicorp/consul/api \
+    && go get github.com/pkg/errors \
+    && go get github.com/sirupsen/logrus \
     && go build -i -o manage manage \
     && chmod +x manage
-
 
 From redis:4.0.11
 
@@ -58,9 +59,6 @@ ENV CONTAINERPILOT=${CONTAINERPILOT_PATH}
 # COPY consul.hcl /etc/consul/
 COPY --from=builder /go/manage /app/
 COPY redis.conf /usr/local/etc/redis/redis.conf
-
-ENV REDIS_ADDR 127.0.0.1:6379
-ENV REDIS_PASS P@ssword!
 
 VOLUME ["/data"]
 

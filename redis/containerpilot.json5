@@ -14,7 +14,10 @@
         "-retry-join", "{{ if .CONSUL }}{{ .CONSUL }}{{ else }}consul{{ end }}",
         "-retry-max", "10",
         "-retry-interval", "10s",
-        "-data-dir", "/data/"
+        "-data-dir", "/data/",
+        "-bind", "0.0.0.0",
+        "-client", "0.0.0.0",
+        "-ui"
       ],
       health: {
         exec: ["/app/manage", "isConsulHealthy"],
@@ -25,8 +28,16 @@
       restarts: "unlimited"
     },
     {
+      name: "onChange",
+      exec: ["/app/manage", "onChange"],
+      when: {
+        source:'{{ .SERVICE_NAME | default "redis" }}',
+        each: "changed"
+      }
+    },
+    {
       name: "preStart",
-      exec: ["manage", "redisPreStart"],
+      exec: ["/app/manage", "redisPreStart"],
       when: {
         source: "consul-agent",
         once: "healthy",
@@ -34,10 +45,10 @@
       },
     },
     {
-      name: "redis",
+      name: '{{ .SERVICE_NAME | default "redis" }}',
       exec: ["redis-server", "/usr/local/etc/redis/redis.conf"],
       restarts: "unlimited",
-      port: 6379,
+      port: {{ .REDIS_PORT | default 6379 }},
       when: {
         source: "consul-agent",
         once: "healthy",
@@ -47,14 +58,13 @@
         exec: ["/app/manage", "isRedisHealthy"],
         interval: 10,
         ttl: 30,
-        timeout: 3
+        timeout: 10
       }
     }
   ],
   watches: [
     {
-      name: "redis-test",
-      tag: "dev",
+      name: '{{ .SERVICE_NAME | default "redis" }}',
       interval: 10
     }
   ]

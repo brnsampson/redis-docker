@@ -1,25 +1,25 @@
-version: '0.1'
-
-network_mode: "bridge"
+version: '3.7'
 
 services:
   redis:
     build: redis/
+    network_mode: bridge
     links:
       - consul:consul
-    ports:
-      - "6379:6379"
+    expose:
+      - 6379
+      - 8500
   
   consul:
     image: consul:latest
+    network_mode: bridge
     restart: always
-    mem_limit: 128m
     ports:
-      - "53:53"
-      - "8600:8600"
+      - "8500:8500"
+      - "8300:8300"
       - "8301:8301"
       - "8302:8302"
-      - "8300:8300"
+      - "8400:8400"
     environment:
       - LOG_LEVEL=info
-    command: "consul agent -server -bootstrap-expect=1 -data-dir=/consul/data -node=consul -bind=0.0.0.0 -config-dir=/consul/config"
+    command: "consul agent -server -bootstrap-expect=1 -data-dir=/consul/data -node=consul -client 0.0.0.0 -bind 0.0.0.0 -config-dir=/consul/config -dev -ui"
